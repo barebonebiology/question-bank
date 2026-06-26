@@ -634,6 +634,59 @@ h1.hero-title em{
   padding: 5px 12px;
   border-radius: 6px;
 }
+
+/* difficulty badge — small pill, top right of the card */
+.difficulty-badge{
+  position:absolute;
+  top: -12px;
+  right: 28px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 12px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  display: none;
+  border: 1.5px solid transparent;
+}
+.difficulty-badge.show{ display:inline-block; }
+.difficulty-badge.diff-easy{ background: var(--sage-pale); color: var(--moss-deep); border-color: var(--sage-deep); }
+.difficulty-badge.diff-medium{ background: #FBE9CC; color: var(--amber-deep); border-color: var(--amber-deep); }
+.difficulty-badge.diff-hard{ background: var(--brick-pale); color: var(--brick); border-color: var(--brick); }
+
+/* stimulus box — passage / data / figure supplied before the question */
+.stimulus-box{
+  display:none;
+  background: var(--bone);
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 10px 0 22px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink);
+  opacity: 0.92;
+}
+.stimulus-box.show{ display:block; }
+.stimulus-box .stim-label{
+  display:block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--moss);
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+.stimulus-box p{ margin: 0 0 10px; }
+.stimulus-box p:last-child{ margin-bottom:0; }
+.stimulus-box img{ max-width:100%; border-radius: 8px; margin: 6px 0; display:block; }
+.stimulus-box table{ border-collapse: collapse; width:100%; margin: 6px 0; font-size: 0.88rem; }
+.stimulus-box th, .stimulus-box td{ border: 1px solid var(--line); padding: 6px 10px; text-align:left; }
+.stimulus-box th{ background: var(--bone-dim); font-weight: 700; color: var(--moss-deep); }
+
 .q-stem{
   font-size: 1.12rem;
   line-height: 1.6;
@@ -982,6 +1035,8 @@ h1.hero-title em{
 
     <div class="specimen-card">
       <span class="specimen-tab" id="mcqSpecimenTab">QUESTION 01</span>
+      <span class="difficulty-badge" id="mcqDifficultyBadge"></span>
+      <div class="stimulus-box" id="mcqStimulusBox"></div>
       <div class="q-stem" id="mcqStem">Question text...</div>
       <ul class="choice-list" id="mcqChoices"></ul>
       <div class="explain-box" id="mcqExplain"></div>
@@ -1027,6 +1082,8 @@ h1.hero-title em{
 
     <div class="specimen-card">
       <span class="specimen-tab" id="frqSpecimenTab">FRQ 01</span>
+      <span class="difficulty-badge" id="frqDifficultyBadge"></span>
+      <div class="stimulus-box" id="frqStimulusBox"></div>
       <div class="q-stem" id="frqStem">Prompt text...</div>
       <div id="frqPartsContainer"></div>
     </div>
@@ -1103,6 +1160,8 @@ h1.hero-title em{
    ---- TEMPLATE for one MCQ question object (copy this shape) ----
 
      {
+       stimulus: "",        // OPTIONAL — leave as "" if not needed. See note below.
+       difficulty: "",      // OPTIONAL — "easy", "medium", or "hard". Leave as "" to hide.
        stem: "Which of the following best describes...?",
        choices: [
          "First answer choice",
@@ -1115,6 +1174,28 @@ h1.hero-title em{
                   (and why the others are wrong, if useful)."
      }
 
+   ABOUT "stimulus": this is for when a question needs a passage, a
+   data table, a described graph, or any other supporting material
+   BEFORE the actual question. It shows up in its own boxed-off area
+   above the question, labeled "Stimulus" automatically.
+
+   If you don't need one, just leave it as stimulus: "" (or delete
+   that line entirely) and no box will show up at all.
+
+   If you DO need one, you can write plain text, or even basic HTML
+   for things like paragraphs or a simple table:
+
+     stimulus: "A biologist measured oxygen consumption in a sample
+                of yeast at three temperatures. Results are shown
+                below.<table><tr><th>Temp (°C)</th><th>O2 used (mL/min)</th></tr>
+                <tr><td>10</td><td>2.1</td></tr>
+                <tr><td>25</td><td>5.4</td></tr>
+                <tr><td>40</td><td>3.0</td></tr></table>",
+
+   ABOUT "difficulty": just type "easy", "medium", or "hard" (lowercase,
+   in quotes) and a small colored tag will appear on the question card.
+   Leave it as "" to show no tag at all.
+
    You can paste as many of these as you want into any topic's
    "questions" array, separated by commas.
    ---------------------------------------------------------------- */
@@ -1125,6 +1206,7 @@ const MCQ_BANK = {
     topics: {
       "1.1": { name: "Structure of Water and Hydrogen Bonding", questions: [
         {
+          difficulty: "easy",
           stem: "Water molecules are described as polar. Which of the following best explains why?",
           choices: [
             "Oxygen and hydrogen atoms share electrons completely equally",
@@ -1136,53 +1218,20 @@ const MCQ_BANK = {
           explain: "Oxygen is more electronegative than hydrogen, so it pulls the shared electrons closer to itself. This creates a partial negative charge near the oxygen and partial positive charges near the hydrogens — making the molecule polar, even though it carries no net overall charge."
         },
         {
-          stem: "A hydrogen bond in water forms between which two parts of neighboring molecules?",
+          difficulty: "medium",
+          stimulus: "A student compares the boiling points of three molecules of similar size.<table><tr><th>Molecule</th><th>Boiling Point (°C)</th></tr><tr><td>Water (H2O)</td><td>100</td></tr><tr><td>Methane (CH4)</td><td>-162</td></tr><tr><td>Ammonia (NH3)</td><td>-33</td></tr></table>",
+          stem: "Based on the data, which of the following best explains why water has a much higher boiling point than methane?",
           choices: [
-            "The oxygen of one water molecule and the oxygen of another",
-            "The hydrogen of one water molecule and the hydrogen of another",
-            "The partially positive hydrogen of one molecule and the partially negative oxygen of another",
-            "The nucleus of one water molecule and the electron cloud of another"
+            "Water molecules are heavier than methane molecules",
+            "Water can form hydrogen bonds between molecules, while methane cannot",
+            "Water has more total atoms than methane",
+            "Methane molecules are more polar than water molecules"
           ],
-          correct: 2,
-          explain: "Hydrogen bonds form between the slightly positive hydrogen on one water molecule and the slightly negative oxygen on a neighboring molecule. This weak electrical attraction is what gives water many of its unique properties, like high surface tension and cohesion."
-        },
-            {
-       stem: "Which of the following best describes...?",
-       choices: [
-         "First answer choice",
-         "Second answer choice",
-         "Third answer choice",
-         "Fourth answer choice"
-       ],
-       correct: 0,
-       explain: "Short explanation of why the correct answer is right"
-     }
-
+          correct: 1,
+          explain: "Water molecules can hydrogen bond with each other because of the polarity created by oxygen's electronegativity. Methane is nonpolar and cannot form hydrogen bonds, so much less energy (and a much lower temperature) is needed to separate its molecules into a gas."
+        }
       ] },
-      "1.2": { name: "Elements of Life", questions: [
-           {
-       stem: "Which of the following best describes...?",
-       choices: [
-         "First answer choice",
-         "Second answer choice",
-         "Third answer choice",
-         "Fourth answer choice"
-       ],
-       correct: 0,
-       explain: "Short explanation of why the correct answer is right"
-     },
-           {
-       stem: "Which of the following best describes...?",
-       choices: [
-         "First answer choice",
-         "Second answer choice",
-         "Third answer choice",
-         "Fourth answer choice"
-       ],
-       correct: 0,
-       explain: "Short explanation of why the correct answer is right"
-     }
-      ] },
+      "1.2": { name: "Elements of Life", questions: [] },
       "1.3": { name: "Introduction to Biological Macromolecules", questions: [] },
       "1.4": { name: "Properties of Biological Macromolecules", questions: [] },
       "1.5": { name: "Lipids", questions: [] },
@@ -1298,6 +1347,8 @@ const MCQ_BANK = {
    ---- TEMPLATE for one FRQ question object (copy this shape) ----
 
      {
+       stimulus: "",        // OPTIONAL — leave as "" if not needed.
+       difficulty: "",      // OPTIONAL — "easy", "medium", or "hard". Leave as "" to hide.
        stem: "Describe the scenario here. This can be a few sentences
               and can include the setup for parts (a), (b), (c)...",
        parts: [
@@ -1320,6 +1371,11 @@ const MCQ_BANK = {
        ]
      }
 
+   "stimulus" and "difficulty" work exactly the same way they do for
+   MCQs (see the note above the MCQ template) — a stimulus shows up
+   in its own boxed-off area above the prompt, and difficulty shows
+   a small colored tag. Leave either as "" to hide it.
+
    Each "part" gets its own textarea for the student to type a
    response, and its own rubric checklist they can tick off
    themselves after writing. Add as many parts as the real FRQ
@@ -1327,7 +1383,31 @@ const MCQ_BANK = {
    ---------------------------------------------------------------- */
 
 const FRQ_BANK = {
-  "1": { name: "Chemistry of Life", questions: [] },
+  "1": { name: "Chemistry of Life", questions: [
+    {
+      difficulty: "medium",
+      stimulus: "<p>A research team purified a sample of an unknown macromolecule and ran two tests:</p><table><tr><th>Test</th><th>Result</th></tr><tr><td>Biuret test (detects peptide bonds)</td><td>Positive — solution turned purple</td></tr><tr><td>Heat treatment to 90°C for 10 minutes</td><td>Sample lost its biological activity</td></tr></table>",
+      stem: "Proteins and nucleic acids are both biological macromolecules built from monomers, but they differ in structure and function.",
+      parts: [
+        {
+          label: "(a)",
+          prompt: "Identify the monomer that makes up proteins and the monomer that makes up nucleic acids. Describe one structural difference between these two monomers. (2 points)",
+          rubric: [
+            { points: 1, text: "Correctly identifies amino acids as the monomer for proteins AND nucleotides as the monomer for nucleic acids" },
+            { points: 1, text: "Describes a structural difference, such as amino acids having a central carbon with an amino group, carboxyl group, and variable side chain, while nucleotides have a sugar, phosphate group, and nitrogenous base" }
+          ]
+        },
+        {
+          label: "(b)",
+          prompt: "Explain how the sequence of monomers in a protein relates to its three-dimensional shape and function. (2 points)",
+          rubric: [
+            { points: 1, text: "States that the linear sequence of amino acids (primary structure) determines how the protein folds" },
+            { points: 1, text: "Explains that folding creates a specific 3D shape, and that this shape determines the protein's function (e.g. enzyme active site, binding site)" }
+          ]
+        }
+      ]
+    }
+  ] },
   "2": { name: "Cell Structure and Function", questions: [] },
   "3": { name: "Cellular Energetics", questions: [] },
   "4": { name: "Cell Communication and Cell Cycle", questions: [] },
@@ -1491,6 +1571,31 @@ function startMcq(unitNum, topicNum){
   renderMcqQuestion();
 }
 
+/* ---------------- Shared helpers: difficulty badge + stimulus ----------------
+   Used by both MCQ and FRQ renderers. A question only shows a badge or
+   stimulus block if you actually included that field — leave them off
+   and nothing extra renders. */
+function renderDifficultyBadge(elId, difficulty){
+  const el = document.getElementById(elId);
+  el.classList.remove("show","diff-easy","diff-medium","diff-hard");
+  el.textContent = "";
+  if(!difficulty) return; // no difficulty set -> badge stays hidden
+  const norm = String(difficulty).trim().toLowerCase();
+  const map = { easy:"diff-easy", medium:"diff-medium", hard:"diff-hard" };
+  if(!map[norm]) return; // unrecognized value -> stay hidden rather than guess
+  el.textContent = norm;
+  el.classList.add("show", map[norm]);
+}
+
+function renderStimulusBox(elId, stimulus){
+  const el = document.getElementById(elId);
+  el.classList.remove("show");
+  el.innerHTML = "";
+  if(!stimulus) return; // no stimulus provided -> box stays hidden
+  el.classList.add("show");
+  el.innerHTML = `<span class="stim-label">Stimulus</span>${stimulus}`;
+}
+
 function renderMcqQuestion(){
   const s = state.mcq;
   const q = s.list[s.idx];
@@ -1500,6 +1605,8 @@ function renderMcqQuestion(){
   document.getElementById("mcqProgressPill").textContent = `${s.idx+1} / ${s.list.length}`;
   document.getElementById("mcqProgressFill").style.width = `${((s.idx+1)/s.list.length)*100}%`;
   document.getElementById("mcqSpecimenTab").textContent = `QUESTION ${String(s.idx+1).padStart(2,"0")}`;
+  renderDifficultyBadge("mcqDifficultyBadge", q.difficulty);
+  renderStimulusBox("mcqStimulusBox", q.stimulus);
   document.getElementById("mcqStem").textContent = q.stem;
 
   const choicesWrap = document.getElementById("mcqChoices");
@@ -1657,6 +1764,8 @@ function renderFrqQuestion(){
   document.getElementById("frqProgressPill").textContent = `${s.idx+1} / ${s.list.length}`;
   document.getElementById("frqProgressFill").style.width = `${((s.idx+1)/s.list.length)*100}%`;
   document.getElementById("frqSpecimenTab").textContent = `FRQ ${String(s.idx+1).padStart(2,"0")}`;
+  renderDifficultyBadge("frqDifficultyBadge", q.difficulty);
+  renderStimulusBox("frqStimulusBox", q.stimulus);
   document.getElementById("frqStem").textContent = q.stem;
 
   const container = document.getElementById("frqPartsContainer");
